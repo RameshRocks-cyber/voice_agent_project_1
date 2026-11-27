@@ -28,35 +28,56 @@ How you work:
   to the nearest emergency room now.
 - Stay on topic. Politely decline unrelated requests, except small talk like weather or time."""
 
+CONVERSATIONAL_PROMPT = """You are Mumaith Chat, a helpful, concise conversational voice assistant.
+You are speaking out loud in a real-time voice conversation, so:
+- Reply in 1 to 3 natural, spoken sentences. Avoid markdown, bullet lists, emojis, or URLs.
+- Match the user's language naturally (English, Hindi, or mixed Hinglish).
+- Ask at most one brief follow-up question when helpful."""
+
 MAX_TOOL_STEPS = 5
 
 
 class VoiceAgent:
-    def __init__(self, client: AsyncGroq, model: str, tools: ToolRegistry):
+    def __init__(
+        self,
+        client: AsyncGroq,
+        model: str,
+        tools: ToolRegistry | None = None,
+        system_prompt: str = SYSTEM_PROMPT,
+    ):
         self.client = client
         self.model = model
         self.tools = tools
+        self.system_prompt = system_prompt
         self.sessions: dict[str, list[dict]] = defaultdict(list)
 
     def reset(self, session_id: str):
         self.sessions.pop(session_id, None)
 
-    async def respond(self, session_id: str, user_text: str) -> dict:
+    async def respond(self, session_id: str, user_text: str, system_hint: str | None = None) -> dict:
         history = self.sessions[session_id]
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}, *history,
-                    {"role": "user", "content": user_text}]
+        messages = [{"role": "system", "content": self.system_prompt}, *history]
+        if system_hint:
+            messages.append({"role": "system", "content": system_hint})
+        messages.append({"role": "user", "content": user_text})
         tool_trace, llm_ms, reply = [], 0, ""
 
         for _ in range(MAX_TOOL_STEPS):
             t0 = time.perf_counter()
-            resp = await self.client.chat.completions.create(
-                model=self.model, messages=messages, tools=self.tools.schemas,
-                tool_choice="auto", temperature=0.3, max_completion_tokens=300,
-            )
+            kwargs = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": 0.4,
+                "max_completion_tokens": 300,
+            }
+            if self.tools and self.tools.schemas:
+                kwargs["tools"] = self.tools.schemas
+                kwargs["tool_choice"] = "auto"
+            resp = await self.client.chat.completions.create(**kwargs)
             llm_ms += (time.perf_counter() - t0) * 1000
             msg = resp.choices[0].message
 
-            if not msg.tool_calls:
+            if not getattr(msg, "tool_calls", None) or not self.tools:
                 reply = (msg.content or "").strip()
                 break
 

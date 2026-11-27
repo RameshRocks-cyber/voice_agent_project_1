@@ -2,9 +2,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 def env(key: str, default=None):
@@ -30,6 +29,7 @@ class Settings:
     groq_api_key = env("GROQ_API_KEY")
     llm_model = env("GROQ_CHAT_MODEL", "openai/gpt-oss-20b")
     stt_model = env("GROQ_STT_MODEL", "whisper-large-v3-turbo")
+    stt_vocab_hint = env("STT_VOCAB_HINT", "Bramha")
     tts_provider = "browser"
 
     timezone = env("TIMEZONE", "Asia/Kolkata")
