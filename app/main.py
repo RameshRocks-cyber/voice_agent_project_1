@@ -2,6 +2,8 @@
 import asyncio
 import json
 import logging
+import re
+import struct
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -12,9 +14,10 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFi
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.websockets import WebSocketState
 
 from . import db
-from .agent import VoiceAgent
+from .agent import CONVERSATIONAL_PROMPT, VoiceAgent
 from .config import settings
 from .rag import KnowledgeBase
 from .speech import SpeechToText, TextToSpeech, build_client
@@ -24,7 +27,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 log = logging.getLogger("api")
 STATIC = Path(__file__).parent / "static"
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
-ALLOWED_LANGUAGES = {"auto", "en", "hi", "mixed"}
+ALLOWED_LANGUAGES = {"auto", "en", "hi", "te", "mixed"}
+LANGUAGE_NAMES = {"en": "English", "hi": "Hindi", "te": "Telugu", "mixed": "Hindi and English (Hinglish)"}
 state: dict = {}
 _init_locks: dict[int, asyncio.Lock] = {}
 
@@ -47,6 +51,7 @@ async def ensure_initialized():
             initialized=True,
             kb=kb,
             agent=VoiceAgent(client, settings.llm_model, ToolRegistry(kb)) if client else None,
+            voice_mode_agent=VoiceAgent(client, settings.llm_model, None, system_prompt=CONVERSATIONAL_PROMPT) if client else None,
             stt=SpeechToText(client, settings.stt_model),
             tts=TextToSpeech(),
         )
@@ -60,7 +65,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Voice AI Transcription Studio", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="Mumaith Chat", version="2.0.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
@@ -121,7 +126,7 @@ async def run_turn(session_id: str, user_text: str, speak: bool, stt_ms: int = 0
 
 @app.get("/")
 async def index():
-    return FileResponse(STATIC / "index.html")
+    return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/health")
@@ -186,6 +191,38 @@ async def reset(session_id: str = Form(...)):
     return {"status": "reset"}
 
 
+def _wrap_pcm_as_wav(pcm_bytes: bytes, sample_rate: int = 16000, channels: int = 1, bits_per_sample: int = 16) -> bytes:
+    byte_rate = sample_rate * channels * (bits_per_sample // 8)
+    block_align = channels * (bits_per_sample // 8)
+    data_size = len(pcm_bytes)
+    header = struct.pack(
+        "<4sI4s4sIHHIIHH4sI",
+        b"RIFF",
+        36 + data_size,
+        b"WAVE",
+        b"fmt ",
+        16,
+        1,  # PCM
+        channels,
+        sample_rate,
+        byte_rate,
+        block_align,
+        bits_per_sample,
+        b"data",
+        data_size,
+    )
+    return header + pcm_bytes
+
+
+def _parse_pcm_rate(mime: str) -> int:
+    match = re.search(r"rate=(\d+)", mime or "")
+    if match:
+        rate = int(match.group(1))
+        if 8000 <= rate <= 48000:
+            return rate
+    return 16000
+
+
 # ---------- Real-time Streaming Transcription WebSocket ----------
 @app.websocket("/ws/transcribe")
 async def ws_transcribe(
@@ -196,8 +233,14 @@ async def ws_transcribe(
     await ensure_initialized()
     await websocket.accept()
     lang = language if language in ALLOWED_LANGUAGES else "auto"
-    ext = "m4a" if "mp4" in mime else "ogg" if "ogg" in mime else "webm"
+    is_pcm = "pcm" in mime
+    pcm_rate = _parse_pcm_rate(mime) if is_pcm else 16000
+    ext = "wav" if (is_pcm or "wav" in mime) else "m4a" if "mp4" in mime else "ogg" if "ogg" in mime else "webm"
     filename = f"stream.{ext}"
+    stt_mime = "audio/wav" if is_pcm else mime
+    min_stt_bytes = 6400 if is_pcm else 1500
+    interim_step_bytes = 32000 if is_pcm else 8000
+    interim_interval_s = 1.5 if is_pcm else 2.4
 
     if state["stt"].client is None:
         await websocket.send_json({
@@ -213,28 +256,41 @@ async def ws_transcribe(
     limit_reached = False
     finalized = False
 
+    async def safe_send(payload: dict):
+        if websocket.client_state != WebSocketState.CONNECTED:
+            return
+        try:
+            await websocket.send_json(payload)
+        except (RuntimeError, WebSocketDisconnect):
+            pass
+
     async def run_stt(msg_type: str):
         nonlocal last_transcribed_len, last_stt_at
-        if len(buffer) < 1500:
+        if len(buffer) < min_stt_bytes:
             if msg_type == "final":
-                await websocket.send_json({"type": "final", "text": "", "language": lang, "stt_ms": 0})
+                await safe_send({"type": "final", "text": "", "language": lang, "low_confidence": True, "stt_ms": 0})
             return
-        snapshot = bytes(buffer)
+        raw_bytes = bytes(buffer)
+        snapshot = _wrap_pcm_as_wav(raw_bytes, pcm_rate) if is_pcm else raw_bytes
         t0 = time.perf_counter()
         try:
-            res = await state["stt"].transcribe_detailed(snapshot, filename, mime, language=lang)
+            res = await state["stt"].transcribe_detailed(snapshot, filename, stt_mime, language=lang)
             stt_ms = round((time.perf_counter() - t0) * 1000)
-            last_transcribed_len = len(snapshot)
+            last_transcribed_len = len(raw_bytes)
             last_stt_at = time.monotonic()
-            await websocket.send_json({
+            low_conf = bool(res.get("low_confidence", False))
+            if msg_type == "interim" and low_conf:
+                return
+            await safe_send({
                 "type": msg_type,
                 "text": res["text"],
                 "language": res["language"],
+                "low_confidence": low_conf,
                 "stt_ms": stt_ms,
             })
         except Exception as exc:
-            log.warning("WebSocket STT error: %s", exc)
-            await websocket.send_json({"type": "error", "message": f"Transcription error: {exc}"})
+            log.warning("WebSocket STT error: %s (cause=%r)", exc, exc.__cause__)
+            await safe_send({"type": "error", "message": f"Transcription error: {exc}"})
 
     try:
         while True:
@@ -258,7 +314,7 @@ async def ws_transcribe(
                     continue
                 buffer.extend(chunk)
                 now = time.monotonic()
-                if len(buffer) - last_transcribed_len >= 6000 and (now - last_stt_at) >= 1.6:
+                if len(buffer) - last_transcribed_len >= interim_step_bytes and (now - last_stt_at) >= interim_interval_s:
                     await run_stt("interim")
             elif message.get("text") is not None:
                 try:
@@ -271,6 +327,11 @@ async def ws_transcribe(
                 elif cmd in ("stop", "flush"):
                     if not finalized:
                         await run_stt("final")
+                    buffer.clear()
+                    last_transcribed_len = 0
+                    limit_reached = False
+                    finalized = False
+                elif cmd == "discard":
                     buffer.clear()
                     last_transcribed_len = 0
                     limit_reached = False
@@ -344,3 +405,97 @@ async def delete_transcription(transcription_id: int):
     if not db.delete_transcription(transcription_id):
         raise HTTPException(404, "Transcription not found")
     return {"status": "deleted", "id": transcription_id}
+
+
+# ---------- Hands-Free Conversational Voice Mode ----------
+class VoiceModeChatIn(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
+    session_id: str | None = None
+    language: str = "en"
+
+
+@app.post("/api/voice-mode/turn")
+async def voice_mode_turn(
+    audio: UploadFile = File(...),
+    session_id: str = Form(None),
+    language: str = Form("en"),
+):
+    if state["stt"].client is None or state.get("voice_mode_agent") is None:
+        raise HTTPException(503, "GROQ_API_KEY is not configured. Add it to .env and restart.")
+    data = await audio.read()
+    if not data:
+        raise HTTPException(400, "Empty audio")
+    if len(data) > MAX_AUDIO_BYTES:
+        raise HTTPException(413, "Utterance too long")
+    session_id = session_id or str(uuid.uuid4())
+    lang = language if language in ALLOWED_LANGUAGES else "en"
+
+    t0 = time.perf_counter()
+    try:
+        stt_res = await state["stt"].transcribe_detailed(
+            data,
+            audio.filename or "utterance.webm",
+            audio.content_type or "audio/webm",
+            language=lang,
+        )
+    except Exception as exc:
+        log.exception("Voice mode STT failed")
+        raise HTTPException(502, f"Speech-to-text error: {exc}") from exc
+    stt_ms = round((time.perf_counter() - t0) * 1000)
+
+    transcript = (stt_res.get("text") or "").strip()
+    if stt_res.get("low_confidence") or len(transcript) < 2 or not any(ch.isalnum() for ch in transcript):
+        return {
+            "session_id": session_id,
+            "transcript": "",
+            "reply": "",
+            "language": lang if lang != "auto" else stt_res["language"],
+            "stt_ms": stt_ms,
+            "llm_ms": 0,
+        }
+
+    lang_name = LANGUAGE_NAMES.get(lang)
+    system_hint = f"Respond only in {lang_name}." if lang_name else None
+    try:
+        llm_res = await state["voice_mode_agent"].respond(session_id, transcript, system_hint=system_hint)
+    except Exception as exc:
+        log.exception("Voice mode LLM failed")
+        raise HTTPException(502, f"Language model error: {exc}") from exc
+
+    return {
+        "session_id": session_id,
+        "transcript": transcript,
+        "reply": llm_res["reply"],
+        "language": stt_res["language"],
+        "stt_ms": stt_ms,
+        "llm_ms": llm_res["llm_ms"],
+    }
+
+
+@app.post("/api/voice-mode/chat")
+async def voice_mode_chat(body: VoiceModeChatIn):
+    if state.get("voice_mode_agent") is None:
+        raise HTTPException(503, "GROQ_API_KEY is not configured. Add it to .env and restart.")
+    session_id = body.session_id or str(uuid.uuid4())
+    user_text = body.text.strip()
+    lang_name = LANGUAGE_NAMES.get(body.language)
+    prompt_text = f"[Respond only in {lang_name}] {user_text}" if lang_name else user_text
+    try:
+        llm_res = await state["voice_mode_agent"].respond(session_id, prompt_text)
+    except Exception as exc:
+        log.exception("Voice mode chat LLM failed")
+        raise HTTPException(502, f"Language model error: {exc}") from exc
+    return {
+        "session_id": session_id,
+        "transcript": user_text,
+        "reply": llm_res["reply"],
+        "language": body.language,
+        "llm_ms": llm_res["llm_ms"],
+    }
+
+
+@app.post("/api/voice-mode/reset")
+async def voice_mode_reset(session_id: str = Form(...)):
+    if state.get("voice_mode_agent"):
+        state["voice_mode_agent"].reset(session_id)
+    return {"status": "reset"}

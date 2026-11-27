@@ -1,49 +1,70 @@
 <!doctype html>
-<html lang="en" data-theme="system">
+<html lang="en" data-theme="light">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VaniScript AI · Multilingual Real-Time Speech-to-Text</title>
+  <title>Mumaith Chat · Voice Intelligence Workspace</title>
+  <link rel="icon" type="image/svg+xml" href="/static/mumaith-logo.svg?v=20261127r">
+  <link rel="apple-touch-icon" href="/static/mumaith-logo.svg?v=20261127r">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css?v=20261127u">
 </head>
+
 <body>
   <div class="app-shell">
-    <!-- Mobile backdrop -->
     <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
 
-    <!-- Sidebar -->
+    <!-- Slim Left Sidebar -->
     <aside id="sidebar" class="sidebar" aria-label="Primary Navigation">
       <div class="sidebar-brand">
-        <div class="brand-mark" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>
-          </svg>
-        </div>
-        <div>
-          <div class="brand-name">VaniScript AI</div>
-          <div class="brand-sub">Hindi · English · Hinglish</div>
-        </div>
+        <img class="brand-logo" src="/static/mumaith-logo.svg?v=20261127r" alt="Mumaith Chat logo" width="28" height="28">
+        <span class="brand-name">Mumaith Chat</span>
       </div>
 
       <nav class="nav-list">
         <button class="nav-item active" data-view="dashboard">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-          <span>Dashboard</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="7" height="9" rx="1" />
+            <rect x="14" y="3" width="7" height="5" rx="1" />
+            <rect x="14" y="12" width="7" height="9" rx="1" />
+            <rect x="3" y="16" width="7" height="5" rx="1" />
+          </svg>
+          <span>Workspace</span>
+        </button>
+        <button class="nav-item" data-view="voice-mode">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <path d="M8 21h8" />
+          </svg>
+          <span>Voice Mode</span>
         </button>
         <button class="nav-item" data-view="live">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
-          <span>Live Transcription</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <span>Live Studio</span>
         </button>
         <button class="nav-item" data-view="history">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 3"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M12 7v5l3 3" />
+          </svg>
           <span>History</span>
         </button>
         <button class="nav-item" data-view="settings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+          </svg>
           <span>Settings</span>
         </button>
       </nav>
@@ -55,7 +76,7 @@
         </div>
         <div class="shortcuts-hint">
           <span><kbd>Space</kbd> Record</span>
-          <span><kbd>⌘/Ctrl+S</kbd> Save</span>
+          <span><kbd>⌘S</kbd> Save</span>
           <span><kbd>/</kbd> Search</span>
         </div>
       </div>
@@ -66,63 +87,243 @@
       <header class="topbar">
         <div class="topbar-left">
           <button id="menuBtn" class="icon-btn mobile-only" aria-label="Toggle navigation">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
           </button>
-          <h1 id="pageTitle" class="page-title">Dashboard</h1>
+          <div class="topbar-brand">
+            <img class="brand-logo brand-logo-sm" src="/static/mumaith-logo.svg?v=20261127r" alt="" aria-hidden="true" width="22" height="22">
+            <span class="topbar-brand-name">Mumaith Chat</span>
+            <span class="topbar-sep" aria-hidden="true">/</span>
+          </div>
+          <span id="pageTitle" class="topbar-crumb">Workspace</span>
         </div>
         <div class="topbar-actions">
-          <button id="themeToggleBtn" class="btn btn-ghost btn-sm" title="Toggle theme">Theme</button>
-          <button id="quickRecordBtn" class="btn btn-primary btn-sm">New Recording</button>
+          <button id="themeToggleBtn" class="btn btn-ghost btn-sm" title="Toggle theme">Dark mode</button>
         </div>
       </header>
 
       <main class="content">
-        <!-- VIEW 1: DASHBOARD -->
-        <section id="view-dashboard" class="view active" aria-labelledby="pageTitle">
-          <div class="kpi-grid">
-            <article class="card kpi-card">
-              <div class="kpi-label">Total Transcriptions</div>
-              <div class="kpi-value" id="kpiTotal">—</div>
-              <div class="kpi-sub">Saved in SQLite database</div>
-            </article>
-            <article class="card kpi-card">
-              <div class="kpi-label">Created Today</div>
-              <div class="kpi-value" id="kpiToday">—</div>
-              <div class="kpi-sub">UTC day count</div>
-            </article>
-            <article class="card kpi-card">
-              <div class="kpi-label">Total Audio Duration</div>
-              <div class="kpi-value" id="kpiDuration">—</div>
-              <div class="kpi-sub">Cumulative recorded time</div>
-            </article>
-            <article class="card kpi-card">
-              <div class="kpi-label">Top Language</div>
-              <div class="kpi-value" id="kpiLanguage">—</div>
-              <div class="kpi-sub" id="kpiLanguageSub">Across saved records</div>
-            </article>
+        <!-- VIEW 1: VOICE WORKSPACE (DASHBOARD) -->
+        <section id="view-dashboard" class="view active" aria-labelledby="workspaceHeading">
+          <div class="workspace-header">
+            <div>
+              <h1 id="workspaceHeading" class="workspace-title">Your voice workspace</h1>
+              <p class="workspace-subtitle">Record, transcribe, and revisit conversations.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="refreshDashboardBtn">Refresh</button>
           </div>
 
-          <div class="dashboard-grid">
-            <article class="card">
-              <div class="card-head">
-                <h2>Transcription Activity (Last 14 Days)</h2>
-                <button class="btn btn-ghost btn-sm" id="refreshDashboardBtn">Refresh</button>
-              </div>
-              <div id="activityChartContainer" class="chart-box"></div>
-            </article>
+          <!-- Primary Voice Assistant Orb -->
+          <section class="workstation-anchor voice-orb-hero" aria-label="Voice Mode launcher">
+            <button id="heroVoiceOrbBtn" class="voice-orb-btn" type="button" data-orb-state="idle" aria-label="Talk to Mumaith Chat">
+              <span class="voice-orb-ring" aria-hidden="true"></span>
+              <span class="voice-orb-ring voice-orb-ring-2" aria-hidden="true"></span>
+              <span class="ai-orb-visual" aria-hidden="true">
+                <span class="ai-orb-aura"></span>
+                <span class="ai-orb-shimmer"></span>
+                <span class="ai-orb-core"></span>
+                <svg class="ai-orb-waves" viewBox="0 0 100 100" fill="none">
+                  <path class="ai-wave-path ai-wave-1" pathLength="100" d="M8 52 C 24 34, 38 70, 54 50 C 68 32, 80 64, 92 48" />
+                  <path class="ai-wave-path ai-wave-2" pathLength="100" d="M8 50 C 26 68, 42 32, 58 52 C 72 68, 82 36, 92 52" />
+                  <circle class="ai-orb-spark" cx="50" cy="50" r="10" />
+                </svg>
+              </span>
+            </button>
+            <div class="voice-orb-label">Talk to Mumaith Chat</div>
+            <p class="voice-orb-sub">Start a hands-free conversation.</p>
+            <p class="voice-orb-lang">Supports natural <strong>English</strong>, <strong>Hindi</strong>, and mixed
+              <strong>Hinglish</strong>.
+            </p>
+          </section>
 
-            <article class="card">
-              <div class="card-head">
-                <h2>Recent Transcriptions</h2>
+          <!-- Compact Low-Emphasis Metrics Row -->
+          <section class="metrics-strip" aria-label="Workspace metrics">
+            <div class="metric-item">
+              <span class="metric-label">Total transcriptions</span>
+              <span class="metric-value mono" id="kpiTotal">—</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Created today</span>
+              <span class="metric-value mono" id="kpiToday">—</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Audio duration</span>
+              <span class="metric-value mono" id="kpiDuration">—</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Primary language</span>
+              <span class="metric-value" id="kpiLanguage">—</span>
+              <span class="metric-note" id="kpiLanguageSub"></span>
+            </div>
+          </section>
+
+          <!-- Recent Transcriptions & 14-Day Activity -->
+          <div class="workspace-split">
+            <section class="panel-section">
+              <div class="section-head">
+                <h2>Recent transcriptions</h2>
                 <button class="btn btn-ghost btn-sm" id="viewAllHistoryBtn">View all</button>
               </div>
-              <div id="recentList" class="recent-list"></div>
-            </article>
+              <div id="recentList" class="recent-table-wrap"></div>
+            </section>
+
+            <section class="panel-section">
+              <div class="section-head">
+                <h2>14-day activity</h2>
+              </div>
+              <div id="activityChartContainer" class="chart-box"></div>
+            </section>
           </div>
         </section>
 
-        <!-- VIEW 2: LIVE TRANSCRIPTION -->
+        <!-- VIEW 1B: HANDS-FREE VOICE MODE -->
+        <section id="view-voice-mode" class="view" hidden>
+          <div class="workspace-header">
+            <div>
+              <h1 class="workspace-title">Voice Mode</h1>
+              <p class="workspace-subtitle">Hands-free conversation with automatic speech detection, LLM replies, and
+                voice playback.</p>
+            </div>
+            <div class="btn-row">
+              <span id="vmMicBadge" class="badge badge-neutral">Mic: Idle</span>
+              <span id="vmStateBadge" class="badge badge-neutral">Session Off</span>
+            </div>
+          </div>
+
+          <div id="vmErrorBanner" class="alert alert-error" hidden>
+            <div class="alert-body">
+              <strong id="vmErrorTitle">Voice Session Error</strong>
+              <p id="vmErrorMsg"></p>
+            </div>
+            <div class="alert-actions">
+              <button id="vmDismissErrBtn" class="btn btn-sm btn-ghost">Dismiss</button>
+            </div>
+          </div>
+
+          <div class="vm-layout">
+            <!-- Controls Bar -->
+            <section class="surface-box vm-controls-bar">
+              <div class="vm-controls-left">
+                <button id="vmStartBtn" class="btn btn-primary">Start voice session</button>
+                <button id="vmInterruptBtn" class="btn btn-secondary" disabled>Interrupt</button>
+                <button id="vmPauseBtn" class="btn btn-secondary" disabled>Pause listening</button>
+                <button id="vmMuteBtn" class="btn btn-secondary" disabled>Mute mic</button>
+                <button id="vmEndBtn" class="btn btn-danger" disabled>End session</button>
+                <button id="vmSaveHistoryBtn" class="btn btn-ghost btn-sm" disabled>Save to History</button>
+              </div>
+              <div class="vm-controls-right">
+                <span id="vmQuickMeta" class="vm-quick-meta muted" aria-live="polite">English · Default voice</span>
+                <div class="vm-settings-wrap">
+                  <button id="vmSettingsBtn" class="btn btn-secondary btn-sm vm-settings-btn" type="button"
+                    aria-haspopup="true" aria-expanded="false" aria-controls="vmSettingsPopover">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                    </svg>
+                    <span>Settings</span>
+                  </button>
+                  <div id="vmSettingsPopover" class="vm-settings-popover" role="dialog" aria-label="Voice Mode Settings" hidden>
+                    <div class="vm-settings-head">
+                      <span>Voice settings</span>
+                      <button id="vmSettingsCloseBtn" class="icon-btn" type="button" aria-label="Close voice settings">✕</button>
+                    </div>
+                    <div class="vm-settings-grid">
+                      <div class="vm-setting-field">
+                        <label class="vm-inline-label" for="vmCaptureMode">Mode</label>
+                        <select id="vmCaptureMode" class="input vm-select">
+                          <option value="hands-free" selected>Hands-free</option>
+                          <option value="wake">Wake phrase (“Hey Vani”)</option>
+                          <option value="ptt">Push-to-talk (Hold Space)</option>
+                        </select>
+                      </div>
+                      <div class="vm-setting-field">
+                        <label class="vm-inline-label" for="vmSensitivity">Sensitivity</label>
+                        <select id="vmSensitivity" class="input vm-select" title="Stricter filtering reduces background triggers but may miss quiet speech.">
+                          <option value="quiet">Quiet room</option>
+                          <option value="balanced" selected>Balanced</option>
+                          <option value="noisy">Noisy room</option>
+                        </select>
+                      </div>
+                      <div class="vm-setting-field">
+                        <label class="vm-inline-label" for="vmLanguage">Language</label>
+                        <select id="vmLanguage" class="input vm-select">
+                          <option value="en" selected>English</option>
+                          <option value="hi">Hindi (हिन्दी)</option>
+                          <option value="te">Telugu (తెలుగు)</option>
+                          <option value="mixed">Hinglish</option>
+                          <option value="auto">Auto</option>
+                        </select>
+                      </div>
+                      <div class="vm-setting-field">
+                        <label class="vm-inline-label" for="vmSilenceMs">Pause</label>
+                        <select id="vmSilenceMs" class="input vm-select">
+                          <option value="900">0.9s</option>
+                          <option value="1200">1.2s</option>
+                          <option value="1500" selected>1.5s</option>
+                          <option value="2200">2.2s</option>
+                        </select>
+                      </div>
+                      <div class="vm-setting-field vm-setting-span">
+                        <label class="vm-inline-label" for="vmVoiceSelect">Voice</label>
+                        <select id="vmVoiceSelect" class="input vm-select">
+                          <option value="">Default voice</option>
+                        </select>
+                      </div>
+                      <div class="vm-setting-field">
+                        <label class="vm-inline-label" for="vmRateSelect">Rate</label>
+                        <select id="vmRateSelect" class="input vm-select">
+                          <option value="0.85">0.85x</option>
+                          <option value="1" selected>1.0x</option>
+                          <option value="1.15">1.15x</option>
+                          <option value="1.3">1.3x</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Live Waveform + Status -->
+            <section class="surface-box vm-status-strip">
+              <div class="waveform-strip live-waveform" id="vmWaveform" aria-label="Voice activity waveform"></div>
+              <div class="vm-live-preview" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <span class="muted" id="vmLiveStatusText">Start a voice session to speak hands-free. Interrupt anytime
+                  while the assistant is speaking.</span>
+                <span class="muted mono" id="vmAudioMeta" style="font-size:11.5px;"></span>
+              </div>
+            </section>
+
+            <!-- Conversation Bubbles -->
+            <section class="surface-box vm-chat-box">
+              <div id="vmMessages" class="vm-messages">
+                <div class="empty-state">
+                  <div class="empty-title">No conversation yet</div>
+                  <p>Start a voice session or type a message below to begin.</p>
+                </div>
+              </div>
+              <form id="vmTextForm" class="vm-text-form">
+                <input id="vmTextInput" class="input" placeholder="Or type a message…" autocomplete="off"
+                  aria-label="Type a message">
+                <button type="submit" class="btn btn-primary btn-sm">Send</button>
+              </form>
+            </section>
+          </div>
+        </section>
+
+        <!-- VIEW 2: LIVE STUDIO -->
         <section id="view-live" class="view" hidden>
+          <div class="workspace-header">
+            <div>
+              <h1 class="workspace-title">Live Studio</h1>
+              <p class="workspace-subtitle">Stream Hindi, English, or mixed Hinglish speech in real time.</p>
+            </div>
+            <span id="micPermBadge" class="badge badge-neutral">Mic: Checking</span>
+          </div>
+
           <div id="liveErrorBanner" class="alert alert-error" hidden>
             <div class="alert-body">
               <strong id="liveErrorTitle">Recording Error</strong>
@@ -135,15 +336,21 @@
           </div>
 
           <div class="live-grid">
-            <!-- Recorder Controls Card -->
-            <article class="card recorder-card">
-              <div class="card-head">
-                <h2>Studio Controls</h2>
-                <span id="micPermBadge" class="badge badge-neutral">Mic: Checking</span>
+            <!-- Studio Controls -->
+            <section class="surface-box recorder-card">
+              <div class="status-row">
+                <span id="recStateBadge" class="badge badge-neutral">Idle</span>
+                <span id="recTimer" class="timer mono">00:00</span>
+              </div>
+
+              <!-- Audio-reactive waveform (static when idle) -->
+              <div class="waveform-strip live-waveform" id="liveWaveform" aria-label="Live audio waveform"></div>
+              <div class="meter-track" aria-hidden="true">
+                <div id="meterFill" class="meter-fill"></div>
               </div>
 
               <div class="form-group">
-                <label for="liveLanguage">Recognition Language</label>
+                <label for="liveLanguage">Recognition language</label>
                 <select id="liveLanguage" class="input">
                   <option value="auto">Automatic Detection</option>
                   <option value="mixed">Hindi + English (Hinglish)</option>
@@ -152,66 +359,69 @@
                 </select>
               </div>
 
-              <div class="recorder-status-box">
-                <div class="status-row">
-                  <span id="recStateBadge" class="badge badge-neutral">Idle</span>
-                  <span id="recTimer" class="timer mono">00:00</span>
-                </div>
-                <div class="meter-track" aria-label="Microphone input level">
-                  <div id="meterFill" class="meter-fill"></div>
-                </div>
-                <p class="helper-text" id="recHelperText">
-                  Speak naturally in Hindi, English, or mixed Hinglish (e.g., “Hello, mera naam Ramesh hai. I want to test the real-time transcription system.”).
-                </p>
-              </div>
-
               <div class="recorder-buttons">
-                <button id="startRecBtn" class="btn btn-primary">Start Recording</button>
+                <button id="startRecBtn" class="btn btn-primary">Start recording</button>
                 <button id="pauseRecBtn" class="btn btn-secondary" disabled>Pause</button>
                 <button id="stopRecBtn" class="btn btn-danger" disabled>Stop</button>
+                <button id="cancelRecBtn" class="btn btn-ghost" disabled>Cancel</button>
               </div>
-            </article>
 
-            <!-- Transcript Output Card -->
-            <article class="card transcript-card">
-              <div class="card-head">
+              <p class="helper-text" id="recHelperText">
+                Try speaking naturally: “Hello, mera naam Ramesh hai. I want to test the real-time transcription
+                system.”
+              </p>
+            </section>
+
+            <!-- Transcript Output -->
+            <section class="surface-box transcript-card">
+              <div class="section-head">
                 <h2>Transcript</h2>
                 <div class="btn-row">
                   <button id="copyLiveBtn" class="btn btn-ghost btn-sm" disabled>Copy</button>
                   <button id="clearLiveBtn" class="btn btn-ghost btn-sm" disabled>Clear</button>
-                  <button id="saveLiveBtn" class="btn btn-primary btn-sm" disabled>Save Transcription</button>
+                  <button id="saveLiveBtn" class="btn btn-primary btn-sm" disabled>Save transcription</button>
                 </div>
               </div>
 
               <div class="transcript-section">
                 <div class="section-label">
-                  <span>Finalized Transcript</span>
+                  <span>Finalized transcript</span>
                   <span id="liveWordCount" class="muted mono">0 words</span>
                 </div>
-                <textarea id="finalTranscript" class="transcript-box" rows="9" placeholder="Finalized speech will appear here. You can also edit before saving..."></textarea>
+                <textarea id="finalTranscript" class="transcript-box" rows="9"
+                  placeholder="Finalized speech appears here. You can edit before saving…"></textarea>
               </div>
 
               <div class="interim-section">
                 <div class="section-label">
-                  <span>Live Interim Stream</span>
+                  <span>Live interim stream</span>
                   <span id="interimLatency" class="muted mono"></span>
                 </div>
                 <div id="interimTranscript" class="interim-box muted">
                   Waiting for speech…
                 </div>
               </div>
-            </article>
+            </section>
           </div>
         </section>
 
         <!-- VIEW 3: TRANSCRIPTION HISTORY -->
         <section id="view-history" class="view" hidden>
-          <article class="card">
+          <div class="workspace-header">
+            <div>
+              <h1 class="workspace-title">Transcription history</h1>
+              <p class="workspace-subtitle">Search, review, edit, and export saved conversations.</p>
+            </div>
+            <button id="newManualBtn" class="btn btn-primary btn-sm">+ New note</button>
+          </div>
+
+          <section class="surface-box">
             <div class="history-toolbar">
               <div class="toolbar-filters">
-                <input id="historySearch" class="input" type="search" placeholder="Search title or transcript… (press /)" aria-label="Search transcriptions">
+                <input id="historySearch" class="input" type="search"
+                  placeholder="Search title or transcript… (press /)" aria-label="Search transcriptions">
                 <select id="historyLangFilter" class="input" aria-label="Filter by language">
-                  <option value="all">All Languages</option>
+                  <option value="all">All languages</option>
                   <option value="auto">Auto</option>
                   <option value="mixed">Hindi + English</option>
                   <option value="hi">Hindi</option>
@@ -224,7 +434,6 @@
                   <option value="oldest">Oldest first</option>
                 </select>
               </div>
-              <button id="newManualBtn" class="btn btn-primary btn-sm">+ New Note</button>
             </div>
 
             <div id="historyContent" class="history-table-wrap"></div>
@@ -236,18 +445,25 @@
                 <button id="nextPageBtn" class="btn btn-ghost btn-sm">Next</button>
               </div>
             </div>
-          </article>
+          </section>
         </section>
 
         <!-- VIEW 4: SETTINGS -->
         <section id="view-settings" class="view" hidden>
+          <div class="workspace-header">
+            <div>
+              <h1 class="workspace-title">Settings</h1>
+              <p class="workspace-subtitle">Configure default language, audio input, and appearance.</p>
+            </div>
+          </div>
+
           <div class="settings-grid">
-            <article class="card">
-              <div class="card-head">
-                <h2>Transcription Preferences</h2>
+            <section class="surface-box">
+              <div class="section-head">
+                <h2>Audio & language</h2>
               </div>
               <div class="form-group">
-                <label for="settingDefaultLang">Default Language</label>
+                <label for="settingDefaultLang">Default language</label>
                 <select id="settingDefaultLang" class="input">
                   <option value="auto">Automatic Detection</option>
                   <option value="mixed">Hindi + English (Hinglish)</option>
@@ -256,7 +472,7 @@
                 </select>
               </div>
               <div class="form-group">
-                <label for="settingMicDevice">Audio Input Device</label>
+                <label for="settingMicDevice">Audio input device</label>
                 <select id="settingMicDevice" class="input">
                   <option value="">System Default Microphone</option>
                 </select>
@@ -264,28 +480,32 @@
               </div>
               <div class="form-group checkbox-row">
                 <input type="checkbox" id="settingAutoSave">
-                <label for="settingAutoSave">Auto-open Save dialog when recording stops</label>
+                <label for="settingAutoSave">Open Save dialog automatically when recording stops</label>
               </div>
-            </article>
+            </section>
 
-            <article class="card">
-              <div class="card-head">
-                <h2>Appearance & Shortcuts</h2>
+            <section class="surface-box">
+              <div class="section-head">
+                <h2>Appearance & shortcuts</h2>
               </div>
               <div class="form-group">
                 <label for="settingTheme">Theme</label>
                 <select id="settingTheme" class="input">
-                  <option value="system">System Default</option>
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>
+                  <option value="system">System Default</option>
                 </select>
               </div>
-              <div class="shortcut-list">
-                <div class="shortcut-item"><span>Start / Stop Recording (Live view)</span><kbd>Space</kbd></div>
-                <div class="shortcut-item"><span>Save Current Transcription</span><kbd>Ctrl / ⌘ + S</kbd></div>
-                <div class="shortcut-item"><span>Search History</span><kbd>/</kbd></div>
+              <div class="form-group checkbox-row">
+                <input type="checkbox" id="settingReducedMotion">
+                <label for="settingReducedMotion">Reduce motion and transitions</label>
               </div>
-            </article>
+              <div class="shortcut-list">
+                <div class="shortcut-item"><span>Start / Stop recording (Live Studio)</span><kbd>Space</kbd></div>
+                <div class="shortcut-item"><span>Save current transcription</span><kbd>Ctrl / ⌘ + S</kbd></div>
+                <div class="shortcut-item"><span>Search history</span><kbd>/</kbd></div>
+              </div>
+            </section>
           </div>
         </section>
       </main>
@@ -327,6 +547,8 @@
   <!-- TOAST CONTAINER -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/voice-vad.js?v=20261127p"></script>
+  <script src="/static/app.js?v=20261127t"></script>
 </body>
+
 </html>

@@ -1,6 +1,6 @@
-# VaniScript AI — Multilingual Real-Time Speech-to-Text
+# Mumaith Chat — Multilingual Real-Time Speech-to-Text
 
-VaniScript AI is a web application for real-time multilingual speech-to-text supporting **English**, **Hindi**, and **Hindi + English (Hinglish)** mixed speech, backed by Groq Whisper (`whisper-large-v3-turbo`), FastAPI WebSockets, and SQLite transcription history management.
+Mumaith Chat is a web application for real-time multilingual speech-to-text supporting **English**, **Hindi**, and **Hindi + English (Hinglish)** mixed speech, backed by Groq Whisper (`whisper-large-v3-turbo`), FastAPI WebSockets, and SQLite transcription history management.
 
 *(Note: The repository also retains the legacy `/api/voice`, `/api/chat`, and `/api/reset` endpoints and `appointments` table from the initial voice-agent prototype.)*
 
@@ -86,7 +86,7 @@ Run the automated test suite (uses temporary SQLite databases and mocked STT/LLM
 ### REST Endpoints
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/` | Serves VaniScript AI frontend |
+| `GET` | `/` | Serves Mumaith Chat frontend |
 | `GET` | `/api/health` | Server status, STT model, and `stt_configured` flag |
 | `GET` | `/api/transcriptions/stats` | Dashboard KPIs, language counts, 14-day activity, and recent items |
 | `POST` | `/api/transcriptions` | Create and save a transcription |
