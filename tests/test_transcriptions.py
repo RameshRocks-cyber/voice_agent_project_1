@@ -204,3 +204,48 @@ def test_ws_transcribe_limit_preserves_header_and_avoids_duplicate_final(monkeyp
             assert all(len(a) <= 10000 for a in seen_audio)
         finally:
             state["stt"] = orig_stt
+
+
+def test_vercel_entrypoint_and_lazy_init(tmp_path, monkeypatch):
+    from api.index import app as vercel_app
+    from app.config import _default_db_path
+
+    monkeypatch.setenv("VERCEL", "1")
+    assert _default_db_path() == "/tmp/agent.db"
+
+    # Simulate serverless cold start where state was not pre-populated by lifespan
+    state.clear()
+    db_file = str(tmp_path / "lazy_init.db")
+    monkeypatch.setattr(settings, "db_path", db_file)
+
+    with TestClient(vercel_app) as client:
+        res = client.get("/api/health")
+        assert res.status_code == 200
+        assert res.json()["status"] == "ok"
+        assert client.get("/").status_code == 200
+        assert client.get("/static/styles.css").status_code == 200
+        assert client.get("/static/app.js").status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_ensure_initialized_is_concurrency_safe(tmp_path, monkeypatch):
+    import asyncio
+    from app.main import ensure_initialized
+    from app.rag import KnowledgeBase
+
+    build_calls = 0
+    orig_build = KnowledgeBase.build
+
+    async def counting_build(self):
+        nonlocal build_calls
+        build_calls += 1
+        await asyncio.sleep(0.02)
+        await orig_build(self)
+
+    monkeypatch.setattr(KnowledgeBase, "build", counting_build)
+    monkeypatch.setattr(settings, "db_path", str(tmp_path / "concurrent.db"))
+    state.clear()
+
+    await asyncio.gather(*(ensure_initialized() for _ in range(10)))
+    assert build_calls == 1
+    assert state["initialized"] is True

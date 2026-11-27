@@ -1,4 +1,5 @@
 """FastAPI entrypoint: real-time STT WebSocket, transcription CRUD, and voice agent routes."""
+import asyncio
 import json
 import logging
 import time
@@ -7,7 +8,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -25,29 +26,48 @@ STATIC = Path(__file__).parent / "static"
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
 ALLOWED_LANGUAGES = {"auto", "en", "hi", "mixed"}
 state: dict = {}
+_init_locks: dict[int, asyncio.Lock] = {}
+
+
+async def ensure_initialized():
+    loop_id = id(asyncio.get_running_loop())
+    lock = _init_locks.setdefault(loop_id, asyncio.Lock())
+    async with lock:
+        if state.get("db_path") != settings.db_path:
+            db.init_db()
+            state["db_path"] = settings.db_path
+        if state.get("initialized"):
+            return
+        client = build_client(required=False)
+        if client is None:
+            log.warning("GROQ_API_KEY is missing; STT and chat endpoints will return 503 until configured.")
+        kb = KnowledgeBase(settings.kb_dir)
+        await kb.build()
+        state.update(
+            initialized=True,
+            kb=kb,
+            agent=VoiceAgent(client, settings.llm_model, ToolRegistry(kb)) if client else None,
+            stt=SpeechToText(client, settings.stt_model),
+            tts=TextToSpeech(),
+        )
+        log.info("Ready | llm=%s stt=%s stt_configured=%s kb=%s db=%s",
+                 settings.llm_model, settings.stt_model, client is not None, kb.mode, settings.db_path)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db.init_db()
-    client = build_client(required=False)
-    if client is None:
-        log.warning("GROQ_API_KEY is missing; STT and chat endpoints will return 503 until configured.")
-    kb = KnowledgeBase(settings.kb_dir)
-    await kb.build()
-    state.update(
-        kb=kb,
-        agent=VoiceAgent(client, settings.llm_model, ToolRegistry(kb)) if client else None,
-        stt=SpeechToText(client, settings.stt_model),
-        tts=TextToSpeech(),
-    )
-    log.info("Ready | llm=%s stt=%s stt_configured=%s kb=%s",
-             settings.llm_model, settings.stt_model, client is not None, kb.mode)
+    await ensure_initialized()
     yield
 
 
 app = FastAPI(title="Voice AI Transcription Studio", version="2.0.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
+
+@app.middleware("http")
+async def init_middleware(request: Request, call_next):
+    await ensure_initialized()
+    return await call_next(request)
 
 
 class ChatIn(BaseModel):
@@ -173,6 +193,7 @@ async def ws_transcribe(
     language: str = Query("auto"),
     mime: str = Query("audio/webm"),
 ):
+    await ensure_initialized()
     await websocket.accept()
     lang = language if language in ALLOWED_LANGUAGES else "auto"
     ext = "m4a" if "mp4" in mime else "ogg" if "ogg" in mime else "webm"
