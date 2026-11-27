@@ -28,6 +28,13 @@ def test_index_and_health():
         assert "<svg" in r_logo.text
         assert 'class="ai-orb-visual"' in r_idx.text
         assert 'data-orb-state="idle"' in r_idx.text
+        assert 'id="dashboardChatGreeting"' in r_idx.text
+
+        r_js = client.get("/static/app.js")
+        assert r_js.status_code == 200
+        assert "Hi, I’m Mumaith Khan. How can I help you?" in r_js.text
+        assert "greetingSpoken" in r_js.text
+        assert "Speaking greeting…" in r_js.text
 
         r_health = client.get("/api/health")
         assert r_health.status_code == 200

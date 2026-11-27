@@ -72,6 +72,8 @@
       activeSpeechMs: 0,
       noiseFloor: 0.006,
       bargeInLoudSince: 0,
+      greeted: false,
+      greetingSpoken: false,
       messages: [], // {role, text, meta}
     },
   };
@@ -174,7 +176,11 @@
     }
     closeMobileSidebar();
 
-    if (targetView === "dashboard") loadDashboard();
+    if (targetView === "dashboard") {
+      ensureVmGreeting();
+      loadDashboard();
+    }
+    if (targetView === "voice-mode") ensureVmGreeting();
     if (targetView === "history") loadHistory();
     if (targetView === "settings") loadAudioDevices();
   }
@@ -1343,10 +1349,25 @@
     });
   }
 
+  const WELCOME_GREETING = "Hi, I’m Mumaith Khan. How can I help you?";
+
+  function ensureVmGreeting() {
+    if (state.vm.greeted || state.vm.messages.length > 0) return false;
+    state.vm.greeted = true;
+    state.vm.messages.push({ role: "assistant", text: WELCOME_GREETING, meta: "" });
+    renderVmMessages();
+    return true;
+  }
+
   function renderVmMessages() {
     const box = $("#vmMessages");
+    const dashGreeting = $("#dashboardChatGreeting");
     if (!state.vm.messages.length) {
       box.innerHTML = `<div class="empty-state"><div class="empty-title">No conversation yet</div><p>Start a voice session or type a message below to begin.</p></div>`;
+      if (dashGreeting) {
+        dashGreeting.innerHTML = "";
+        dashGreeting.hidden = true;
+      }
       return;
     }
     box.innerHTML = state.vm.messages.map((m) => `
@@ -1356,6 +1377,16 @@
       </div>
     `).join("");
     box.scrollTop = box.scrollHeight;
+    if (dashGreeting) {
+      const onlyGreeting = state.vm.messages.length === 1 && state.vm.messages[0].role === "assistant";
+      if (onlyGreeting) {
+        dashGreeting.innerHTML = `<div class="vm-bubble assistant"><div>${esc(state.vm.messages[0].text)}</div></div>`;
+        dashGreeting.hidden = false;
+      } else {
+        dashGreeting.innerHTML = "";
+        dashGreeting.hidden = true;
+      }
+    }
     $("#vmSaveHistoryBtn").disabled = false;
   }
 
@@ -1433,20 +1464,33 @@
     updateVmQuickMeta();
   }
 
-  function speakVmReply(text, langHint) {
+  function speakVmReply(text, langHint, options = {}) {
+    const allowBargeIn = options.allowBargeIn !== false;
+    const statusLabel = options.statusText || "Speaking reply…";
+    const readyLabel = options.readyText || (state.vm.muted ? "Mic muted." : (state.vm.paused ? "Paused." : "Listening…"));
+
+    const resumeListeningAfterSpeech = (customStatus) => {
+      if (!state.vm.active) return;
+      const nextIdle = vmIdleStatus();
+      const captureMode = $("#vmCaptureMode")?.value || "hands-free";
+      state.vm.detector?.setState(captureMode === "ptt" ? "paused" : nextIdle, Date.now());
+      setVmStatus(nextIdle, customStatus || readyLabel);
+    };
+
     if (!text) {
-      if (state.vm.active) setVmStatus(vmIdleStatus(), "Listening for your next question…");
+      resumeListeningAfterSpeech("Listening for your next question…");
       return;
     }
-    if (!("speechSynthesis" in window)) {
-      if (state.vm.active) setVmStatus(vmIdleStatus(), "Browser speech synthesis unavailable; listening…");
+    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance !== "function") {
+      showVmError("Speech Output Unavailable", "Browser speech synthesis is unavailable; continuing in listening mode.");
+      resumeListeningAfterSpeech("Speech synthesis unavailable — listening…");
       return;
     }
     stopVmSpeech();
     state.vm.speakingStartedAt = Date.now();
-    state.vm.detector?.setState("speaking", state.vm.speakingStartedAt);
-    vmLog("tts_start", { chars: text.length });
-    setVmStatus("speaking", "Speaking reply…");
+    state.vm.detector?.setState(allowBargeIn ? "speaking" : "paused", state.vm.speakingStartedAt);
+    vmLog("tts_start", { chars: text.length, allowBargeIn });
+    setVmStatus("speaking", statusLabel);
 
     const sentences = (text.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) || [text])
       .map((s) => s.trim())
@@ -1460,17 +1504,14 @@
     const langTagMap = { en: "en-IN", hi: "hi-IN", te: "te-IN", mixed: "en-IN" };
     const rate = Number($("#vmRateSelect")?.value || 1.0);
 
-    const finishAll = () => {
+    const finishAll = (errorMsg = "") => {
       state.vm.ttsQueue = [];
       clearInterval(state.vm.ttsWatchdog);
       state.vm.ttsWatchdog = null;
       state.vm.activeUtterance = null;
-      vmLog("tts_end");
+      vmLog("tts_end", errorMsg ? { error: errorMsg } : {});
       if (state.vm.active && state.vm.status === "speaking") {
-        const nextIdle = vmIdleStatus();
-        const captureMode = $("#vmCaptureMode")?.value || "hands-free";
-        state.vm.detector?.setState(captureMode === "ptt" ? "paused" : nextIdle, Date.now());
-        setVmStatus(nextIdle, state.vm.muted ? "Mic muted." : (state.vm.paused ? "Paused." : "Listening…"));
+        resumeListeningAfterSpeech(errorMsg || readyLabel);
       }
     };
 
@@ -1499,7 +1540,15 @@
           finishAll();
         }
       };
-      u.onerror = () => finishAll();
+      u.onerror = (ev) => {
+        const errCode = ev && ev.error ? ev.error : "unknown";
+        if (errCode !== "canceled" && errCode !== "interrupted") {
+          showVmError("Speech Output Failed", `Could not play voice greeting/reply (${errCode}).`);
+          finishAll("Speech output failed — listening…");
+        } else {
+          finishAll();
+        }
+      };
       state.vm.activeUtterance = u;
       window.speechSynthesis.speak(u);
     };
@@ -2003,12 +2052,16 @@
         const captureMode = $("#vmCaptureMode")?.value || "hands-free";
         const sensitivity = $("#vmSensitivity")?.value || "balanced";
         const silenceMs = Number($("#vmSilenceMs")?.value || 1500);
+        const shouldSpeakGreeting = !state.vm.greetingSpoken && (
+          state.vm.messages.length === 0 ||
+          (state.vm.messages.length === 1 && state.vm.messages[0].role === "assistant" && state.vm.messages[0].text === WELCOME_GREETING)
+        );
         state.vm.submittedUtteranceIds = new Set();
 
         state.vm.detector = window.VoiceVad.createTurnDetector({
           sensitivity,
           config: { silenceMs },
-          initialState: captureMode === "ptt" ? "paused" : "listening",
+          initialState: (shouldSpeakGreeting || captureMode === "ptt") ? "paused" : "listening",
           onBargeIn: () => {
             vmLog("barge_in");
             stopVmSpeech();
@@ -2075,7 +2128,17 @@
           : captureMode === "wake"
             ? "Wake-phrase mode: start with “Hey Vani”."
             : "Listening… speak naturally whenever you're ready.";
-        setVmStatus("listening", readyMsg);
+        if (shouldSpeakGreeting) {
+          ensureVmGreeting();
+          state.vm.greetingSpoken = true;
+          speakVmReply(WELCOME_GREETING, $("#vmLanguage")?.value || "en", {
+            allowBargeIn: false,
+            statusText: "Speaking greeting…",
+            readyText: readyMsg,
+          });
+        } else {
+          setVmStatus("listening", readyMsg);
+        }
       } catch (err) {
         if (state.vm.stream) {
           state.vm.stream.getTracks().forEach((t) => t.stop());
@@ -2199,6 +2262,7 @@
   initWaveforms();
   populateVmVoices();
   updateVmQuickMeta();
+  ensureVmGreeting();
   if ("speechSynthesis" in window && typeof window.speechSynthesis.addEventListener === "function") {
     window.speechSynthesis.addEventListener("voiceschanged", populateVmVoices);
   }
