@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VaniScript AI · Multilingual Real-Time Speech-to-Text</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Mobile backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar" aria-label="Primary Navigation">
+      <div class="sidebar-brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">VaniScript AI</div>
+          <div class="brand-sub">Hindi · English · Hinglish</div>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-view="live">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Live Transcription</span>
+        </button>
+        <button class="nav-item" data-view="history">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 3"/></svg>
+          <span>History</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="health-pill" id="healthPill">
+          <span class="dot" id="healthDot"></span>
+          <span id="healthText">Checking server…</span>
+        </div>
+        <div class="shortcuts-hint">
+          <span><kbd>Space</kbd> Record</span>
+          <span><kbd>⌘/Ctrl+S</kbd> Save</span>
+          <span><kbd>/</kbd> Search</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Column -->
+    <div class="main-col">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="menuBtn" class="icon-btn mobile-only" aria-label="Toggle navigation">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <h1 id="pageTitle" class="page-title">Dashboard</h1>
+        </div>
+        <div class="topbar-actions">
+          <button id="themeToggleBtn" class="btn btn-ghost btn-sm" title="Toggle theme">Theme</button>
+          <button id="quickRecordBtn" class="btn btn-primary btn-sm">New Recording</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard" class="view active" aria-labelledby="pageTitle">
+          <div class="kpi-grid">
+            <article class="card kpi-card">
+              <div class="kpi-label">Total Transcriptions</div>
+              <div class="kpi-value" id="kpiTotal">—</div>
+              <div class="kpi-sub">Saved in SQLite database</div>
+            </article>
+            <article class="card kpi-card">
+              <div class="kpi-label">Created Today</div>
+              <div class="kpi-value" id="kpiToday">—</div>
+              <div class="kpi-sub">UTC day count</div>
+            </article>
+            <article class="card kpi-card">
+              <div class="kpi-label">Total Audio Duration</div>
+              <div class="kpi-value" id="kpiDuration">—</div>
+              <div class="kpi-sub">Cumulative recorded time</div>
+            </article>
+            <article class="card kpi-card">
+              <div class="kpi-label">Top Language</div>
+              <div class="kpi-value" id="kpiLanguage">—</div>
+              <div class="kpi-sub" id="kpiLanguageSub">Across saved records</div>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="card">
+              <div class="card-head">
+                <h2>Transcription Activity (Last 14 Days)</h2>
+                <button class="btn btn-ghost btn-sm" id="refreshDashboardBtn">Refresh</button>
+              </div>
+              <div id="activityChartContainer" class="chart-box"></div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h2>Recent Transcriptions</h2>
+                <button class="btn btn-ghost btn-sm" id="viewAllHistoryBtn">View all</button>
+              </div>
+              <div id="recentList" class="recent-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- VIEW 2: LIVE TRANSCRIPTION -->
+        <section id="view-live" class="view" hidden>
+          <div id="liveErrorBanner" class="alert alert-error" hidden>
+            <div class="alert-body">
+              <strong id="liveErrorTitle">Recording Error</strong>
+              <p id="liveErrorMsg"></p>
+            </div>
+            <div class="alert-actions">
+              <button id="liveRetryBtn" class="btn btn-sm btn-secondary">Retry</button>
+              <button id="liveDismissErrBtn" class="btn btn-sm btn-ghost">Dismiss</button>
+            </div>
+          </div>
+
+          <div class="live-grid">
+            <!-- Recorder Controls Card -->
+            <article class="card recorder-card">
+              <div class="card-head">
+                <h2>Studio Controls</h2>
+                <span id="micPermBadge" class="badge badge-neutral">Mic: Checking</span>
+              </div>
+
+              <div class="form-group">
+                <label for="liveLanguage">Recognition Language</label>
+                <select id="liveLanguage" class="input">
+                  <option value="auto">Automatic Detection</option>
+                  <option value="mixed">Hindi + English (Hinglish)</option>
+                  <option value="hi">Hindi (हिन्दी)</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+
+              <div class="recorder-status-box">
+                <div class="status-row">
+                  <span id="recStateBadge" class="badge badge-neutral">Idle</span>
+                  <span id="recTimer" class="timer mono">00:00</span>
+                </div>
+                <div class="meter-track" aria-label="Microphone input level">
+                  <div id="meterFill" class="meter-fill"></div>
+                </div>
+                <p class="helper-text" id="recHelperText">
+                  Speak naturally in Hindi, English, or mixed Hinglish (e.g., “Hello, mera naam Ramesh hai. I want to test the real-time transcription system.”).
+                </p>
+              </div>
+
+              <div class="recorder-buttons">
+                <button id="startRecBtn" class="btn btn-primary">Start Recording</button>
+                <button id="pauseRecBtn" class="btn btn-secondary" disabled>Pause</button>
+                <button id="stopRecBtn" class="btn btn-danger" disabled>Stop</button>
+              </div>
+            </article>
+
+            <!-- Transcript Output Card -->
+            <article class="card transcript-card">
+              <div class="card-head">
+                <h2>Transcript</h2>
+                <div class="btn-row">
+                  <button id="copyLiveBtn" class="btn btn-ghost btn-sm" disabled>Copy</button>
+                  <button id="clearLiveBtn" class="btn btn-ghost btn-sm" disabled>Clear</button>
+                  <button id="saveLiveBtn" class="btn btn-primary btn-sm" disabled>Save Transcription</button>
+                </div>
+              </div>
+
+              <div class="transcript-section">
+                <div class="section-label">
+                  <span>Finalized Transcript</span>
+                  <span id="liveWordCount" class="muted mono">0 words</span>
+                </div>
+                <textarea id="finalTranscript" class="transcript-box" rows="9" placeholder="Finalized speech will appear here. You can also edit before saving..."></textarea>
+              </div>
+
+              <div class="interim-section">
+                <div class="section-label">
+                  <span>Live Interim Stream</span>
+                  <span id="interimLatency" class="muted mono"></span>
+                </div>
+                <div id="interimTranscript" class="interim-box muted">
+                  Waiting for speech…
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- VIEW 3: TRANSCRIPTION HISTORY -->
+        <section id="view-history" class="view" hidden>
+          <article class="card">
+            <div class="history-toolbar">
+              <div class="toolbar-filters">
+                <input id="historySearch" class="input" type="search" placeholder="Search title or transcript… (press /)" aria-label="Search transcriptions">
+                <select id="historyLangFilter" class="input" aria-label="Filter by language">
+                  <option value="all">All Languages</option>
+                  <option value="auto">Auto</option>
+                  <option value="mixed">Hindi + English</option>
+                  <option value="hi">Hindi</option>
+                  <option value="en">English</option>
+                </select>
+                <input id="historyDateFrom" class="input" type="date" aria-label="From date" title="From date">
+                <input id="historyDateTo" class="input" type="date" aria-label="To date" title="To date">
+                <select id="historySort" class="input" aria-label="Sort order">
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                </select>
+              </div>
+              <button id="newManualBtn" class="btn btn-primary btn-sm">+ New Note</button>
+            </div>
+
+            <div id="historyContent" class="history-table-wrap"></div>
+
+            <div class="pagination-bar" id="historyPagination" hidden>
+              <span id="paginationInfo" class="muted"></span>
+              <div class="btn-row">
+                <button id="prevPageBtn" class="btn btn-ghost btn-sm">Previous</button>
+                <button id="nextPageBtn" class="btn btn-ghost btn-sm">Next</button>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <!-- VIEW 4: SETTINGS -->
+        <section id="view-settings" class="view" hidden>
+          <div class="settings-grid">
+            <article class="card">
+              <div class="card-head">
+                <h2>Transcription Preferences</h2>
+              </div>
+              <div class="form-group">
+                <label for="settingDefaultLang">Default Language</label>
+                <select id="settingDefaultLang" class="input">
+                  <option value="auto">Automatic Detection</option>
+                  <option value="mixed">Hindi + English (Hinglish)</option>
+                  <option value="hi">Hindi</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="settingMicDevice">Audio Input Device</label>
+                <select id="settingMicDevice" class="input">
+                  <option value="">System Default Microphone</option>
+                </select>
+                <p class="helper-text">Grant microphone permission to list specific hardware devices.</p>
+              </div>
+              <div class="form-group checkbox-row">
+                <input type="checkbox" id="settingAutoSave">
+                <label for="settingAutoSave">Auto-open Save dialog when recording stops</label>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h2>Appearance & Shortcuts</h2>
+              </div>
+              <div class="form-group">
+                <label for="settingTheme">Theme</label>
+                <select id="settingTheme" class="input">
+                  <option value="system">System Default</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </div>
+              <div class="shortcut-list">
+                <div class="shortcut-item"><span>Start / Stop Recording (Live view)</span><kbd>Space</kbd></div>
+                <div class="shortcut-item"><span>Save Current Transcription</span><kbd>Ctrl / ⌘ + S</kbd></div>
+                <div class="shortcut-item"><span>Search History</span><kbd>/</kbd></div>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: TRANSCRIPTION DETAILS / EDIT / CREATE -->
+  <div id="detailModal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="modalTitle">Transcription Details</h2>
+        <button id="closeModalBtn" class="icon-btn" aria-label="Close modal">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+      <div id="modalFooter" class="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMATION -->
+  <div id="confirmModal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal modal-sm">
+      <div class="modal-head">
+        <h2 id="confirmTitle">Confirm Action</h2>
+        <button id="closeConfirmBtn" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmCancelBtn" class="btn btn-ghost">Cancel</button>
+        <button id="confirmOkBtn" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINTABLE AREA FOR PDF EXPORT -->
+  <section id="printSheet" class="print-sheet" aria-hidden="true"></section>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
