@@ -206,9 +206,9 @@ def test_ws_transcribe_limit_preserves_header_and_avoids_duplicate_final(monkeyp
             state["stt"] = orig_stt
 
 
-def test_vercel_entrypoint_and_lazy_init(tmp_path, monkeypatch):
-    from api.index import app as vercel_app
+def test_vercel_zero_config_entrypoint_and_lazy_init(tmp_path, monkeypatch):
     from app.config import _default_db_path
+    from app.main import app as fastapi_app
 
     monkeypatch.setenv("VERCEL", "1")
     assert _default_db_path() == "/tmp/agent.db"
@@ -218,7 +218,7 @@ def test_vercel_entrypoint_and_lazy_init(tmp_path, monkeypatch):
     db_file = str(tmp_path / "lazy_init.db")
     monkeypatch.setattr(settings, "db_path", db_file)
 
-    with TestClient(vercel_app) as client:
+    with TestClient(fastapi_app) as client:
         res = client.get("/api/health")
         assert res.status_code == 200
         assert res.json()["status"] == "ok"
